@@ -78,8 +78,8 @@ def llava_chat():
         images=image_tensor,
         image_sizes=image_sizes,
         do_sample=False,
-        temperature=0.01,
-        max_new_tokens=500,
+        temperature=temperature,
+        max_new_tokens=max_new_tokens,
     )
     text_outputs = tokenizer.batch_decode(cont, skip_special_tokens=True)
 
