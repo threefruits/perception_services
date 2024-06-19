@@ -4,7 +4,7 @@ from PIL import Image
 import json
 from io import BytesIO
 
-from language_model import LLaVA
+from apis.language_model import LLaVA
 
 # @pytest.fixture
 
