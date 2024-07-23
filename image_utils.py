@@ -13,7 +13,11 @@ from typing import Tuple as tuple
 from PIL import Image
 from torchvision import transforms
 
+<<<<<<< HEAD
 from cloud_services.visualizer import Visualizer
+=======
+from visualizer import Visualizer
+>>>>>>> 03cda2969107ebd79b46a0bde9152261fb6d1388
 
 def normalized_bbox_to_pixel_scale(bbox, image) -> list[int]:
     width, height = image.size
