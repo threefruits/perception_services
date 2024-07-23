@@ -30,7 +30,7 @@ class LanguageModel():
 class GPT4V(LanguageModel):
     def __init__(
         self, 
-        model="gpt-4-vision-preview",
+        model="gpt-4o-2024-05-13",
         temperature=0.0
     ):
         self.model = model
@@ -45,13 +45,12 @@ class GPT4V(LanguageModel):
         base64_image = convert_pil_image_to_base64(image)
 
         # Get OpenAI API Key from environment variable
-        api_key = os.environ["OPENAI_API_KEY"]
+        # api_key = os.environ["OPENAI_API_KEY"]
         client = OpenAI(
-            api_key=api_key,
         )
 
         response = client.chat.completions.create(
-            model="gpt-4-vision-preview",
+            model="gpt-4o-2024-05-13",
             messages=[
                 {
                     "role": "system",
