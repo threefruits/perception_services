@@ -36,7 +36,7 @@ class GPT4V(LanguageModel):
         self.model = model
         
         self.temperature = temperature
-
+        self.last_input = None
         super().__init__(
             support_vision=True
         )
@@ -48,7 +48,26 @@ class GPT4V(LanguageModel):
         # api_key = os.environ["OPENAI_API_KEY"]
         client = OpenAI(
         )
-
+        self.last_input = [
+                {
+                    "role": "system",
+                    "content": [
+                        {"type": "text", "text": meta_prompt}
+                    ],
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{base64_image}",
+                            },
+                        },
+                    ],
+                }
+            ]
         response = client.chat.completions.create(
             model="gpt-4o-2024-05-13",
             messages=[
@@ -71,6 +90,45 @@ class GPT4V(LanguageModel):
                     ],
                 }
             ],
+            temperature=self.temperature,
+            max_tokens=1024,
+        )
+        ret = response.choices[0].message.content
+        return ret
+
+    def continue_chat(self, prompt, image, response):
+        base64_image = convert_pil_image_to_base64(image)
+
+        client = OpenAI(
+        )
+        message = self.last_input.append(
+            [
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                        "type": "text",
+                        "text": response
+                        }
+                    ]
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{base64_image}",
+                            },
+                        },
+                        {"type": "text", "text": prompt},
+                    ],
+                }
+            ]
+        )
+        response = client.chat.completions.create(
+            model="gpt-4o-2024-05-13",
+            messages=message,
             temperature=self.temperature,
             max_tokens=1024,
         )

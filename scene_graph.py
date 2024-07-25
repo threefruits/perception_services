@@ -51,7 +51,7 @@ edges=
         filtered_nodes = [node for node in nodes if not ('table' in node[0].lower() or 'chair' in node[0].lower())]
 
         # Filter edges, ensuring neither source nor destination is a filtered-out object
-        filtered_edges = [edge for edge in edges if not any('table' in node[0].lower() or 'chair' in node[0].lower() for node in filtered_nodes if node[0] in edge)]
+        filtered_edges = [edge for edge in edges if not any('table' in element or 'chair' in element for element in edge)]
 
         # Use a set to collect unique object classes from filtered nodes, removing numbers
         object_classes_set = set(re.sub(r'\d+', '', obj) for obj, _ in filtered_nodes)
@@ -76,7 +76,7 @@ edges=
             image=image,
             text_queries=object_classes,
             bbox_score_top_k=20,
-            bbox_conf_threshold=0.2
+            bbox_conf_threshold=0.15
         )
         best_boxes = {}
         for det in detected_objects:
@@ -90,41 +90,52 @@ edges=
         # missing_objects
         masks = self.sam.segment_by_bboxes(image=image, bboxes=[obj['bbox'] for obj in detected_objects])
         
-        return masks
+        box_names = [obj["box_name"] for obj in detected_objects]
+        return masks, box_names
     
     def get_annotated_segmentation(self, image, masks):
         segment_img = annotate_masks(
             image, 
             masks=[anno["segmentation"] for anno in masks],
             label_mode="1",
-            alpha=0.5,
+            alpha=0.05,
             draw_mask=True, 
             draw_mark=True, 
-            draw_box=True
+            draw_box=True,
+            mark_position='top_left'
         )
         return segment_img
 
 if __name__ == "__main__":
-    # Usage example:
     scene_graph_processor = SceneGraph()
-
-    file_path = "./images/1.png"
+    file_path = "cloud_services/images/1.png"
     image = Image.open(file_path)
     predicate = "Fruits"
     # scene_graph_string = scene_graph_processor.get_scene_graph_string(image, predicate)
+    # print(scene_graph_string)
     scene_graph_string ='''
     nodes=
     [
-    ('soda_can1', None),
-    ('red_cube1', None),
-    ('green_mat1', None)
+    ('orange1', 'fruits'),
+    ('orange2', 'fruits'),
+    ('orange3', 'fruits'),
+    ('orange4', 'fruits, with_mark'),
+    ('bowl1', 'wood'),
+    ('book1', None),
+    ('pen1', None),
+    ('cable1', None)
     ]
 
     edges=
     [
-    ('ON', 'soda_can1', 'table1'),
-    ('ON', 'red_cube1', 'table1'),
-    ('ON', 'green_mat1', 'table1')
+    ('ON', 'orange1', 'table'),
+    ('ON', 'orange2', 'table'),
+    ('ON', 'orange3', 'table'),
+    ('ON', 'orange4', 'table'),
+    ('ON', 'bowl1', 'table'),
+    ('ON', 'book1', 'table'),
+    ('ON', 'pen1', 'table'),
+    ('ON', 'cable1', 'table')
     ]
     '''
     nodes, edges, object_classes = scene_graph_processor.parse_scene_graph(scene_graph_string)
@@ -132,5 +143,8 @@ if __name__ == "__main__":
     print("Nodes:", nodes)
     print("Edges:", edges)
     print("Object classes:", object_classes)
-    segment_img = scene_graph_processor.detect_and_segment(image, object_classes)
-    segment_img.show()
+    masks, box_names = scene_graph_processor.detect_and_segment(image, object_classes)
+    print("Box names:", box_names)
+
+    annotated_img = scene_graph_processor.get_annotated_segmentation(image, masks)
+    annotated_img.show()
