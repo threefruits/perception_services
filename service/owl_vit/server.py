@@ -33,7 +33,7 @@ def decode_base64(base64_image: str):
     return image
 
 
-def predict_boxes(image: Image.Image, text_queries: list[str], bbox_conf: float=0.2):
+def predict_boxes(image: Image.Image, text_queries, bbox_conf: float=0.2):
     inputs = processor(
         text=[text_queries],  # 2D list needed
         images=image, 
