@@ -17,7 +17,9 @@ args = parser.parse_args()
 
 processor = LlavaNextProcessor.from_pretrained(args.model_id)
 model = LlavaNextForConditionalGeneration.from_pretrained(args.model_id, torch_dtype=torch.float16, low_cpu_mem_usage=True, load_in_4bit=args.load_in_4bit, attn_implementation="flash_attention_2") 
-
+if not args.load_in_4bit:
+    model.to("cuda:0")
+    
 # Flask app
 app = Flask(__name__)
 
