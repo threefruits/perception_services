@@ -9,4 +9,4 @@
 #SBATCH --nodelist=crane5
 nvidia-smi
 source activate learning
-python /data/home/anxing/service/sam/server.py
+python /data/home/anxing/cloud_services/service/sam/server.py

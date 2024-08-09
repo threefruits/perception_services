@@ -10,8 +10,8 @@
 nvidia-smi
 source activate learning
 
-python /data/home/anxing/service/llava/llava_server_hf_110b.py &
-python /data/home/anxing/service/owl_vit/server.py &
-python /data/home/anxing/service/sam/server.py &
+python /data/home/anxing/cloud_services/service/llava/llava_server_hf_110b.py &
+python /data/home/anxing/cloud_services/service/owl_vit/server.py &
+python /data/home/anxing/cloud_services/service/sam/server.py &
 
 wait
