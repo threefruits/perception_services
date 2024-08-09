@@ -1,14 +1,5 @@
-import pytest
-import base64
 from PIL import Image
-import json
-from io import BytesIO
-
 from apis.language_model import LLaVA
-
-# @pytest.fixture
-
-
 
 client = LLaVA()
 
