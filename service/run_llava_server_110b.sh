@@ -9,4 +9,4 @@
 #SBATCH --nodelist=crane5
 nvidia-smi
 source activate learning
-python /data/home/anxing/cloud_services/service/llava/llava_server.py --port 55577 --model_id llava-hf/llava-next-110b-hf
+python /data/home/anxing/cloud_services/service/llava/llava_server.py --port 55577 --model_id llava-hf/llava-next-110b-hf --load_in_4bit
