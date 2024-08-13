@@ -1,4 +1,4 @@
-from transformers import LlavaNextProcessor, LlavaNextForConditionalGeneration
+from transformers import LlavaNextProcessor, LlavaNextForConditionalGeneration, BitsAndBytesConfig
 import torch
 from PIL import Image
 import requests
@@ -16,9 +16,18 @@ parser.add_argument('--load_in_4bit', action='store_true', help='Load model in 4
 args = parser.parse_args()
 
 processor = LlavaNextProcessor.from_pretrained(args.model_id)
-model = LlavaNextForConditionalGeneration.from_pretrained(args.model_id, torch_dtype=torch.float16, low_cpu_mem_usage=True, load_in_4bit=args.load_in_4bit, attn_implementation="flash_attention_2") 
-if not args.load_in_4bit:
-    model.to("cuda:0")
+
+if args.load_in_4bit:
+    bnb_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_use_double_quant=True,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_compute_dtype=torch.bfloat16
+    )
+    model = LlavaNextForConditionalGeneration.from_pretrained(args.model_id, torch_dtype=torch.float16, quantization_config=bnb_config, low_cpu_mem_usage=True, device_map="auto", attn_implementation="flash_attention_2") 
+else:
+    model = LlavaNextForConditionalGeneration.from_pretrained(args.model_id, torch_dtype=torch.float16, low_cpu_mem_usage=True, device_map="auto", attn_implementation="flash_attention_2") 
+
     
 # Flask app
 app = Flask(__name__)
