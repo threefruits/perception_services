@@ -63,7 +63,7 @@ def llava_chat():
     prompt = processor.apply_chat_template(conversation, add_generation_prompt=True)
     inputs = processor(prompt, image, return_tensors="pt").to("cuda:0")
 
-    output = model.generate(**inputs, temperature=temperature, max_new_tokens=100)
+    output = model.generate(**inputs, temperature=temperature, max_new_tokens=max_new_tokens)
     text_outputs = processor.decode(output[0], skip_special_tokens=True)
 
     # Return results as JSON
