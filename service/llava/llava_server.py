@@ -12,10 +12,17 @@ parser.add_argument('--ip', default='0.0.0.0', type=str, help='IP address to run
 parser.add_argument('--port', default=55576, type=int, help='Port number to run the app on')
 parser.add_argument('--model_id', default='llava-hf/llava-v1.6-mistral-7b-hf', type=str, help='Model ID to use for inference')
 parser.add_argument('--load_in_4bit', action='store_true', help='Load model in 4-bit mode')
+parser.add_argument('--model_path', default=None, type=str, help='Model path to use for inference')
 
 args = parser.parse_args()
 
 processor = LlavaNextProcessor.from_pretrained(args.model_id)
+
+if args.model_path is not None:
+    model_id = "/data/home/anxing/FT_VLM/data/" + args.model_path
+    print("using finetuned model    ", model_id)
+else:
+    model_id = args.model_id
 
 if args.load_in_4bit:
     bnb_config = BitsAndBytesConfig(
@@ -24,9 +31,9 @@ if args.load_in_4bit:
     bnb_4bit_quant_type="nf4",
     bnb_4bit_compute_dtype=torch.bfloat16
     )
-    model = LlavaNextForConditionalGeneration.from_pretrained(args.model_id, torch_dtype=torch.float16, quantization_config=bnb_config, low_cpu_mem_usage=True, device_map="auto", attn_implementation="flash_attention_2") 
+    model = LlavaNextForConditionalGeneration.from_pretrained(model_id, torch_dtype=torch.float16, quantization_config=bnb_config, low_cpu_mem_usage=True, device_map="auto", attn_implementation="flash_attention_2") 
 else:
-    model = LlavaNextForConditionalGeneration.from_pretrained(args.model_id, torch_dtype=torch.float16, low_cpu_mem_usage=True, device_map="auto", attn_implementation="flash_attention_2") 
+    model = LlavaNextForConditionalGeneration.from_pretrained(model_id, torch_dtype=torch.float16, low_cpu_mem_usage=True, device_map="auto", attn_implementation="flash_attention_2") 
 
     
 # Flask app
@@ -61,6 +68,7 @@ def llava_chat():
         },
     ]
     prompt = processor.apply_chat_template(conversation, add_generation_prompt=True)
+    # print(prompt)
     inputs = processor(prompt, image, return_tensors="pt").to("cuda:0")
 
     output = model.generate(**inputs, temperature=temperature, max_new_tokens=max_new_tokens)
