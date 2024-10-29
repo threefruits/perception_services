@@ -69,7 +69,7 @@ def get_processed_features(sd_model, sd_aug, aggre_net, extractor_vit, num_patch
     # normalize the descriptors
     norms_desc = torch.linalg.norm(desc, dim=1, keepdim=True)
     desc = desc / (norms_desc + 1e-8)
-    return desc
+    return desc, features_dino
 
 sd_model, sd_aug = load_model(diffusion_ver='v1-5', image_size=num_patches*16, num_timesteps=50, block_indices=[2,5,8,11])
 extractor_vit = ViTExtractor('dinov2_vitb14', stride=14, device='cuda')
@@ -106,24 +106,31 @@ def decode_base64(base64_image: str):
 @app.route('/process_image', methods=['POST'])
 def process_image():
     try:
-        # Get base64 image from request
         data = request.get_json()
         if 'image' not in data:
             return jsonify({'error': 'No image provided'}), 400
         
-        # Decode base64 image
         image = decode_base64(data['image'])
         
         # Get features
-        features = get_processed_features(sd_model, sd_aug, aggre_net, extractor_vit, num_patches, img=image)
+        features, features_dino = get_processed_features(sd_model, sd_aug, aggre_net, extractor_vit, num_patches, img=image)
         
-        # Convert features to numpy and then to list for JSON serialization
+        # Convert to numpy arrays
         features_np = features.cpu().detach().numpy()
-        features_list = features_np.tolist()
+        features_dino_np = features_dino.cpu().detach().numpy()
+        
+        # Convert numpy arrays to compressed base64 strings
+        features_bytes = io.BytesIO()
+        np.save(features_bytes, features_np)
+        features_base64 = base64.b64encode(features_bytes.getvalue()).decode('utf-8')
+        
+        features_dino_bytes = io.BytesIO()
+        np.save(features_dino_bytes, features_dino_np)
+        features_dino_base64 = base64.b64encode(features_dino_bytes.getvalue()).decode('utf-8')
         
         return jsonify({
-            'features': features_list,
-            'shape': features_np.shape
+            'features': features_base64,
+            'features_dino': features_dino_base64,
         })
 
     except Exception as e:
