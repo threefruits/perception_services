@@ -85,7 +85,7 @@ class Detector():
 
 class OWLViT(Detector):
     # def __init__(self, server_url="http://phoenix0.d2.comp.nus.edu.sg:55570"):
-    def __init__(self, server_url="http://crane5.d2.comp.nus.edu.sg:55570"):
+    def __init__(self, server_url="http://crane5.d2.comp.nus.edu.sg:4000"):
         self.server_url = server_url
 
     def detect_objects(self, image: Image.Image, text_queries: list[str], bbox_score_top_k=20, bbox_conf_threshold=0.5):

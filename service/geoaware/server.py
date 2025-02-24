@@ -143,7 +143,7 @@ def process_image():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Geo Aware SC Server')
     parser.add_argument('--ip', default='0.0.0.0', type=str, help='IP address to run the app on. Use "0.0.0.0" for your machine\'s IP address')
-    parser.add_argument('--port', default=55575, type=int, help='Port number to run the app on')
+    parser.add_argument('--port', default=4002, type=int, help='Port number to run the app on')
     args = parser.parse_args()
 
     app.run(host=args.ip, port=args.port, debug=True, use_reloader=False)

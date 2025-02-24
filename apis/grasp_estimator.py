@@ -22,7 +22,7 @@ def convert_pil_image_to_base64(image: Image) -> str:
 
 
 class GraspEstimator():
-    def __init__(self, server_url="http://crane5.d2.comp.nus.edu.sg:55901"):
+    def __init__(self, server_url="http://crane5.d2.comp.nus.edu.sg:4003"):
         self.server_url = server_url  
 
     def sample_grasp(self, image_rgb: np.ndarray, image_depth: np.ndarray, segmap: np.ndarray, K: list, segmap_id: int):

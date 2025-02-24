@@ -21,7 +21,7 @@ class Segmentor():
     pass
 
 class SAM(Segmentor):
-    def __init__(self, server_url="http://crane5.d2.comp.nus.edu.sg:55563"):
+    def __init__(self, server_url="http://crane5.d2.comp.nus.edu.sg:4001"):
         self.server_url = server_url  
 
     def _send_request(self, endpoint: str, image: Image, additional_data: dict = None):
