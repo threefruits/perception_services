@@ -9,7 +9,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description='Molmo Server')
 parser.add_argument('--ip', default='0.0.0.0', type=str, help='IP address to run the app on. Use "0.0.0.0" for your machine\'s IP address')
-parser.add_argument('--port', default=55577, type=int, help='Port number to run the app on')
+parser.add_argument('--port', default=4007, type=int, help='Port number to run the app on')
 parser.add_argument('--model_id', default='allenai/Molmo-7B-D-0924', type=str, help='Model ID to use for inference')
 parser.add_argument('--load_in_4bit', action='store_true', help='Load model in 4-bit mode')
 # parser.add_argument('--model_path', default=None, type=str, help='Model path to use for inference')

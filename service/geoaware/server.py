@@ -71,9 +71,29 @@ def get_processed_features(sd_model, sd_aug, aggre_net, extractor_vit, num_patch
     desc = desc / (norms_desc + 1e-8)
     return desc, features_dino
 
-sd_model, sd_aug = load_model(diffusion_ver='v1-5', image_size=num_patches*16, num_timesteps=50, block_indices=[2,5,8,11])
-extractor_vit = ViTExtractor('dinov2_vitb14', stride=14, device='cuda')
 
+def get_processed_features_dino(sd_model, sd_aug, aggre_net, extractor_vit, num_patches, img=None, img_path=None):
+    # extract dinov2 features
+    if img_path is not None:
+        feature_base = img_path.replace('JPEGImages', 'features').replace('.jpg', '')
+        dino_path = f"{feature_base}_dino.pt"
+        
+        if os.path.exists(dino_path):
+            features_dino = torch.load(dino_path)
+        else:
+            if img is None: img = Image.open(img_path).convert('RGB')
+            img_dino_input = resize(img, target_res=num_patches*14, resize=True, to_pil=True)
+            img_batch = extractor_vit.preprocess_pil(img_dino_input)
+            features_dino = extractor_vit.extract_descriptors(img_batch.cuda(), layer=11, facet='token').permute(0, 1, 3, 2).reshape(1, -1, num_patches, num_patches)
+    else:
+        img_dino_input = resize(img, target_res=num_patches*14, resize=True, to_pil=True)
+        img_batch = extractor_vit.preprocess_pil(img_dino_input)
+        features_dino = extractor_vit.extract_descriptors(img_batch.cuda(), layer=11, facet='token').permute(0, 1, 3, 2).reshape(1, -1, num_patches, num_patches)
+
+    # normalize the descriptors
+    norms_desc = torch.linalg.norm(features_dino, dim=1, keepdim=True)
+    features_dino = features_dino / (norms_desc + 1e-8)
+    return features_dino
 
 # img_size = 480
 # img1_path = '/data/home/anxing/GeoAware-SC/data/images/unicorn.jpg' # path to the source image
@@ -130,6 +150,33 @@ def process_image():
         
         return jsonify({
             'features': features_base64,
+            'features_dino': features_dino_base64,
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/process_image_dino', methods=['POST'])
+def process_image_dino():
+    try:
+        data = request.get_json()
+        if 'image' not in data:
+            return jsonify({'error': 'No image provided'}), 400
+        
+        image = decode_base64(data['image'])
+        
+        # Get features
+        features_dino = get_processed_features_dino(sd_model, sd_aug, aggre_net, extractor_vit, num_patches, img=image)
+        
+        # Convert to numpy arrays
+        features_dino_np = features_dino.cpu().detach().numpy()
+        
+        # Convert numpy arrays to compressed base64 strings
+        features_dino_bytes = io.BytesIO()
+        np.save(features_dino_bytes, features_dino_np)
+        features_dino_base64 = base64.b64encode(features_dino_bytes.getvalue()).decode('utf-8')
+        
+        return jsonify({
             'features_dino': features_dino_base64,
         })
 
