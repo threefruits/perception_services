@@ -116,6 +116,16 @@ curl http://<host>:4001/healthz
 curl http://<host>:4003/healthz
 ```
 
+## Tests
+
+Smoke tests are in the `tests/` folder:
+
+```bash
+python tests/test_owlv2.py --server-url http://127.0.0.1:4000
+python tests/test_sam.py --server-url http://127.0.0.1:4001
+python tests/test_grasp.py --server-url http://127.0.0.1:4003
+```
+
 ## Project Structure
 
 ```text
