@@ -1,4 +1,5 @@
 import json
+import os
 from PIL import Image
 from typing import List as list
 import requests
@@ -84,9 +85,8 @@ class Detector():
     pass
 
 class OWLViT(Detector):
-    # def __init__(self, server_url="http://phoenix0.d2.comp.nus.edu.sg:55570"):
-    def __init__(self, server_url="http://crane5.d2.comp.nus.edu.sg:4000"):
-        self.server_url = server_url
+    def __init__(self, server_url=None):
+        self.server_url = server_url or os.environ.get("OWLV2_SERVER_URL", "http://127.0.0.1:4000")
 
     def detect_objects(self, image: Image.Image, text_queries: list[str], bbox_score_top_k=20, bbox_conf_threshold=0.5):
         """

@@ -146,10 +146,15 @@ def api_match_by_image():
     })
 
 
+@app.route('/healthz', methods=['GET'])
+def healthz():
+    return jsonify({'status': 'ok', 'model': ckpt_name})
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='OWL-ViT Server')
     parser.add_argument('--ip', default='0.0.0.0', type=str, help='IP address to run the app on. Use "0.0.0.0" for your machine\'s IP address')
     parser.add_argument('--port', default=4000, type=int, help='Port number to run the app on')
     args = parser.parse_args()
 
-    app.run(host=args.ip, port=args.port, debug=True, use_reloader=False)
+    app.run(host=args.ip, port=args.port, debug=False, use_reloader=False)

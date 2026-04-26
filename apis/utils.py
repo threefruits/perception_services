@@ -2,10 +2,14 @@ import os
 import sys
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CONTACT_GRASPNET_DIR = os.path.join(BASE_DIR, "third_party", "contact_graspnet")
+POINTNET2_DIR = os.path.join(CONTACT_GRASPNET_DIR, "pointnet2")
+
 sys.path.append(os.path.join(BASE_DIR))
-sys.path.append(os.path.join(BASE_DIR,'contact_graspnet'))
-sys.path.append(os.path.join(BASE_DIR, 'pointnet2',  'tf_ops/grouping'))
-sys.path.append(os.path.join(BASE_DIR, 'pointnet2',  'utils'))
+sys.path.append(CONTACT_GRASPNET_DIR)
+sys.path.append(os.path.join(CONTACT_GRASPNET_DIR, "contact_graspnet"))
+sys.path.append(os.path.join(POINTNET2_DIR, "tf_ops", "grouping"))
+sys.path.append(os.path.join(POINTNET2_DIR, "utils"))
 
 from PIL import Image
 import argparse

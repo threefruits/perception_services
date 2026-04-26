@@ -1,6 +1,7 @@
 import requests
 import pickle
 import base64
+import os
 import numpy as np
 from PIL import Image
 
@@ -21,8 +22,8 @@ class Segmentor():
     pass
 
 class SAM(Segmentor):
-    def __init__(self, server_url="http://crane5.d2.comp.nus.edu.sg:4001"):
-        self.server_url = server_url  
+    def __init__(self, server_url=None):
+        self.server_url = server_url or os.environ.get("SAM_SERVER_URL", "http://127.0.0.1:4001")
 
     def _send_request(self, endpoint: str, image: Image, additional_data: dict = None):
         """

@@ -1,6 +1,7 @@
 import requests
 import pickle
 import base64
+import os
 import numpy as np
 from PIL import Image
 
@@ -22,8 +23,8 @@ def convert_pil_image_to_base64(image: Image) -> str:
 
 
 class GraspEstimator():
-    def __init__(self, server_url="http://crane5.d2.comp.nus.edu.sg:4003"):
-        self.server_url = server_url  
+    def __init__(self, server_url=None):
+        self.server_url = server_url or os.environ.get("GRASP_SERVER_URL", "http://127.0.0.1:4003")
 
     def sample_grasp(self, image_rgb: np.ndarray, image_depth: np.ndarray, segmap: np.ndarray, K: list, segmap_id: int):
         """

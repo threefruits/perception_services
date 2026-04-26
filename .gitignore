@@ -1,2 +1,43 @@
-/service/result*
-/service/*.sh
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Local environments and pixi runtime state
+.pixi/
+.python-version
+.venv/
+venv/
+env/
+
+# Logs and runtime outputs
+*.log
+service/logs/
+service/*.out
+service/det-seg-grasp-*.out
+
+# Test / generated artifacts
+results/
+tmp/
+*.tmp
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+
+# Third-party checkout and heavy model artifacts
+third_party/
+checkpoints/
+*.ckpt
+*.h5
+*.npz
+*.npy
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+

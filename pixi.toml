@@ -1,0 +1,77 @@
+[workspace]
+name = "perception-services"
+channels = ["pytorch", "nvidia", "conda-forge"]
+platforms = ["linux-64"]
+
+[tasks]
+clone-contact-graspnet = "bash -lc 'mkdir -p third_party && if [ -d third_party/contact_graspnet/.git ]; then echo third_party/contact_graspnet already exists; else git clone https://github.com/NVlabs/contact_graspnet.git third_party/contact_graspnet; fi'"
+stack = "bash service/start_det_seg_grasp.sh"
+owl-server = "python service/owl_vit/server.py"
+sam-server = "python service/sam/server.py"
+
+[dependencies]
+python = "3.9.*"
+pip = "*"
+git = "*"
+flask = ">=3,<4"
+numpy = ">=1.26,<2"
+scipy = ">=1.13,<1.15"
+pillow = "*"
+requests = "*"
+matplotlib = ">=3.8,<3.9"
+pytorch = "==2.4.1"
+torchvision = "==0.19.1"
+pytorch-cuda = "12.1.*"
+
+[pypi-dependencies]
+transformers = "==4.46.3"
+accelerate = "==1.0.1"
+safetensors = ">=0.4,<1"
+sentencepiece = ">=0.2,<1"
+
+[feature.grasp.dependencies]
+python = "3.8.*"
+pip = "*"
+git = "*"
+flask = ">=2,<3"
+gcc_linux-64 = "*"
+gxx_linux-64 = "*"
+make = "*"
+cudnn = "8.0.*"
+cudatoolkit = "11.0.*"
+numpy = "==1.19.2"
+scipy = "==1.4.1"
+pillow = "==8.0.1"
+h5py = "==3.1.0"
+trimesh = "==3.8.12"
+tqdm = "==4.51.0"
+future = "==0.18.2"
+shapely = "==1.7.1"
+typing_extensions = "==3.7.4.3"
+six = "==1.15.0"
+
+[feature.grasp.pypi-dependencies]
+tensorflow = "==2.5.0"
+tensorflow-gpu = "==2.5.0"
+imageio = "==2.9.0"
+opencv-python = "==4.4.0.46"
+pyrender = "==0.1.43"
+pyyaml = "==5.3.1"
+requests = "==2.31.0"
+protobuf = "==3.17.3"
+pyglet = "==1.5.9"
+pyopengl = "==3.1.0"
+freetype-py = "==2.2.0"
+networkx = "==2.5"
+decorator = "==4.4.2"
+rtree = "*"
+gdown = ">=5.2,<6"
+
+[feature.grasp.tasks]
+compile-grasp-ops = { cmd = "bash compile_pointnet_tfops.sh", cwd = "third_party/contact_graspnet" }
+ensure-grasp-checkpoint = "bash service/grasp/ensure_grasp_checkpoint.sh"
+grasp-server = "bash service/grasp/run_grasp_server.sh"
+
+[environments]
+default = { solve-group = "owl-sam" }
+grasp = { features = ["grasp"], no-default-feature = true }
