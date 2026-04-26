@@ -1,22 +1,18 @@
 # Perception Services
 
-Lightweight service host for robotics perception with three focused components:
+Minimal perception service stack for robotics, focused on:
 
 - **OWLv2** object detection
 - **SAM** segmentation
-- **Contact-GraspNet** grasp proposal service
+- **Contact-GraspNet** grasp proposal API
 
-This repo is designed around **[`pixi`](https://pixi.sh/)** for reproducible environments and simple service startup.
+The project uses **[`pixi`](https://pixi.sh/)** for reproducible environments and task management.
 
-## Services
-
-Default ports:
+## Default Ports
 
 - `4000` → OWLv2
 - `4001` → SAM
 - `4003` → Contact-GraspNet
-
-All three can be started together or independently.
 
 ## Quick Start
 
@@ -26,19 +22,19 @@ All three can be started together or independently.
 curl -fsSL https://pixi.sh/install.sh | bash
 ```
 
-### 2) Bootstrap the workspace
+### 2) Bootstrap environments + third-party dependency
 
 ```bash
 bash service/setup_all.sh
 ```
 
-This does the following:
+This sets up pixi envs, clones:
 
-- installs project environments
-- clones `third_party/contact_graspnet` if needed
-- auto-downloads Contact-GraspNet checkpoints if missing
+- `https://github.com/NVlabs/contact_graspnet.git` into `third_party/contact_graspnet`
 
-### 3) Compile Contact-GraspNet PointNet ops
+and auto-downloads the Contact-GraspNet checkpoint if missing.
+
+### 3) Optional: compile Contact-GraspNet PointNet ops
 
 ```bash
 pixi run -e grasp compile-grasp-ops
@@ -46,13 +42,13 @@ pixi run -e grasp compile-grasp-ops
 
 ## Run Services
 
-### Run all services
+### Run full stack locally
 
 ```bash
 pixi run stack
 ```
 
-### Run individually
+### Run services individually
 
 ```bash
 pixi run owl-server
@@ -60,55 +56,24 @@ pixi run sam-server
 pixi run -e grasp grasp-server
 ```
 
-Logs from combined startup are written to `service/logs/`.
+Combined stack logs are written to `service/logs/`.
 
-## Checkpoint Management
+## Slurm Deployment (crane7)
 
-Checkpoint bootstrap for Contact-GraspNet is automatic during grasp startup.
-
-Manual trigger:
+Use the included launcher:
 
 ```bash
-pixi run -e grasp ensure-grasp-checkpoint
+sbatch service/run_det_seg_grasp_crane7.sh
 ```
 
-Useful overrides:
-
-- `CONTACT_GRASPNET_CHECKPOINT_DIR` to point to a custom checkpoint path
-- `CONTACT_GRASPNET_CHECKPOINT_URL` to use a custom download source
-
-## Port Overrides
-
-You can override ports when starting the full stack:
-
-```bash
-OWLV2_PORT=4100 SAM_PORT=4101 GRASP_PORT=4103 pixi run stack
-```
-
-## Slurm Usage
-
-Default Slurm launcher:
-
-```bash
-sbatch service/run_det_seg_grasp_pi_crane6.sh
-```
-
-Default resource request in that script:
+Current Slurm settings:
 
 ```text
 #SBATCH --gres=gpu:1
-#SBATCH --nodelist=crane6
+#SBATCH --nodelist=crane7
 ```
 
-To run on a different node and custom ports:
-
-```bash
-OWLV2_PORT=4000 SAM_PORT=4001 GRASP_PORT=4002 \
-sbatch -w crane7 --export=ALL,OWLV2_PORT=4000,SAM_PORT=4001,GRASP_PORT=4002 \
-service/run_det_seg_grasp_pi_crane6.sh
-```
-
-## API Health Checks
+## Health Checks
 
 ```bash
 curl http://<host>:4000/healthz
@@ -116,43 +81,34 @@ curl http://<host>:4001/healthz
 curl http://<host>:4003/healthz
 ```
 
-## Tests
+## Smoke Tests
 
-Smoke tests are in the `tests/` folder:
+Tests are in `tests/`:
 
 ```bash
-python tests/test_owlv2.py --server-url http://127.0.0.1:4000
-python tests/test_sam.py --server-url http://127.0.0.1:4001
-python tests/test_grasp.py --server-url http://127.0.0.1:4003
+pixi run python tests/test_owlv2.py --server-url http://<host>:4000
+pixi run python tests/test_sam.py --server-url http://<host>:4001
+pixi run python tests/test_grasp.py --server-url http://<host>:4003
 ```
 
 ## Project Structure
 
 ```text
 .
-├── apis/                         # client-side API wrappers
+├── apis/                              # client-side API wrappers
 ├── service/
-│   ├── owl_vit/                  # OWLv2 server
-│   ├── sam/                      # SAM server
-│   ├── grasp/                    # grasp server wrappers/checkpoint bootstrap
-│   ├── start_det_seg_grasp.sh    # local multi-service launcher
-│   └── run_det_seg_grasp_pi_crane6.sh  # Slurm launcher
+│   ├── owl_vit/                       # OWLv2 server
+│   ├── sam/                           # SAM server
+│   ├── grasp/                         # Contact-GraspNet wrapper + checkpoint bootstrap
+│   ├── start_det_seg_grasp.sh         # multi-service local launcher
+│   └── run_det_seg_grasp_crane7.sh    # Slurm launcher (crane7)
+├── tests/                             # smoke test scripts
 ├── third_party/
-│   └── contact_graspnet/         # upstream clone (kept unmodified)
-└── pixi.toml                     # environments + tasks
+│   └── contact_graspnet/              # upstream clone (kept unmodified)
+└── pixi.toml                          # environments + tasks
 ```
-
-## Troubleshooting
-
-- If `grasp` fails on startup, check:
-  - checkpoint exists under `third_party/contact_graspnet/checkpoints/...`
-  - PointNet ops were compiled: `pixi run -e grasp compile-grasp-ops`
-  - `service/logs/grasp.log`
-- If OWLv2/SAM fail, inspect:
-  - `service/logs/owlv2.log`
-  - `service/logs/sam.log`
 
 ## Notes
 
-- The `third_party/contact_graspnet` clone is treated as upstream code.
-- Integration behavior is implemented in this repo (launcher scripts, pixi tasks, wrappers), not by modifying upstream sources.
+- Upstream `third_party/contact_graspnet` is used as cloned code and is not modified.
+- Integration logic lives in this repo (`service/` launchers/wrappers and `apis/` clients).

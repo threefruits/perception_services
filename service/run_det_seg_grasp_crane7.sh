@@ -2,9 +2,9 @@
 #SBATCH --job-name=det-seg-grasp
 #SBATCH --output=service/%x-%j.out
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=20000
+#SBATCH --mem=40000
 #SBATCH --gres=gpu:1
-#SBATCH --nodelist=crane6
+#SBATCH --nodelist=crane7
 
 set -euo pipefail
 

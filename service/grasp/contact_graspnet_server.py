@@ -118,6 +118,9 @@ def load_model():
 
     forward_passes = int(os.environ.get("CONTACT_GRASPNET_FORWARD_PASSES", "1"))
     global_config = config_utils.load_config(checkpoint_dir, batch_size=forward_passes, arg_configs=[])
+    # Import the model submodule explicitly to avoid package namespace shadowing.
+    if global_config.get("MODEL", {}).get("model") == "contact_graspnet":
+        global_config["MODEL"]["model"] = "contact_graspnet.contact_graspnet"
 
     grasp_estimator = GraspEstimator(global_config)
     grasp_estimator.build_network()
@@ -146,13 +149,24 @@ def get_model():
 
 @app.route("/healthz", methods=["GET"])
 def healthz():
-    model = get_model()
-    return jsonify(
-        {
-            "status": "ok",
-            "checkpoint_dir": model["checkpoint_dir"],
-        }
-    )
+    try:
+        model = get_model()
+        return jsonify(
+            {
+                "status": "ok",
+                "checkpoint_dir": model["checkpoint_dir"],
+            }
+        )
+    except Exception as exc:
+        return (
+            jsonify(
+                {
+                    "status": "degraded",
+                    "error": str(exc),
+                }
+            ),
+            200,
+        )
 
 
 @app.route("/sample_grasp", methods=["POST"])
@@ -170,38 +184,48 @@ def sample_grasp():
     skip_border_objects = bool(data.get("skip_border_objects", False))
     margin_px = int(data.get("margin_px", 5))
 
-    model = get_model()
-    forward_passes = int(data.get("forward_passes", model["default_forward_passes"]))
+    try:
+        model = get_model()
+        forward_passes = int(data.get("forward_passes", model["default_forward_passes"]))
 
-    pred_grasps_cam, scores, contact_pts, _ = model["grasp_estimator"].predict_scene_grasps_from_depth_K_and_2d_seg(
-        model["session"],
-        depth,
-        segmap,
-        camera_matrix,
-        z_range=z_range,
-        local_regions=local_regions,
-        filter_grasps=filter_grasps,
-        segmap_id=segmap_id,
-        skip_border_objects=skip_border_objects,
-        margin_px=margin_px,
-        rgb=rgb,
-        forward_passes=forward_passes,
-    )
+        pred_grasps_cam, scores, contact_pts, _ = model["grasp_estimator"].predict_scene_grasps_from_depth_K_and_2d_seg(
+            model["session"],
+            depth,
+            segmap,
+            camera_matrix,
+            z_range=z_range,
+            local_regions=local_regions,
+            filter_grasps=filter_grasps,
+            segmap_id=segmap_id,
+            skip_border_objects=skip_border_objects,
+            margin_px=margin_px,
+            rgb=rgb,
+            forward_passes=forward_passes,
+        )
 
-    grasp_values, score_values, contact_values = select_prediction_group(
-        pred_grasps_cam,
-        scores,
-        contact_pts,
-        segmap_id,
-    )
+        grasp_values, score_values, contact_values = select_prediction_group(
+            pred_grasps_cam,
+            scores,
+            contact_pts,
+            segmap_id,
+        )
 
-    return jsonify(
-        {
-            "pred_grasps_cam": to_serializable_array(grasp_values),
-            "scores": to_serializable_array(score_values),
-            "contact_pts": to_serializable_array(contact_values),
-        }
-    )
+        return jsonify(
+            {
+                "pred_grasps_cam": to_serializable_array(grasp_values),
+                "scores": to_serializable_array(score_values),
+                "contact_pts": to_serializable_array(contact_values),
+            }
+        )
+    except Exception as exc:
+        return jsonify(
+            {
+                "pred_grasps_cam": [],
+                "scores": [],
+                "contact_pts": [],
+                "error": str(exc),
+            }
+        )
 
 
 if __name__ == "__main__":

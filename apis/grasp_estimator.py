@@ -13,8 +13,6 @@ import numpy as np
 import base64
 from io import BytesIO
 # from visualization_utils import visualize_grasps, show_image
-from .utils import extract_point_clouds
-import open3d as o3d
 
 def convert_pil_image_to_base64(image: Image) -> str:
     buffered = BytesIO()
@@ -60,6 +58,9 @@ class GraspEstimator():
         return response.json()['pred_grasps_cam'], response.json()['scores'], response.json()['contact_pts']
     
     def visualize_grasp(self, pred_grasps_cam, depth, K, top_grasp_idx=None, rgb=None, z_range=[0.2,1.8], skip_border_objects=False, view_params=None):
+        from .utils import extract_point_clouds
+        import open3d as o3d
+
         cam_K = np.array(K).reshape(3,3)
         pc_full, pc_segments, pc_colors = extract_point_clouds(depth, cam_K, rgb=rgb, skip_border_objects=skip_border_objects, z_range=z_range)
         
